@@ -1,124 +1,91 @@
 // src/handlers/news.js
-const fetch = require('node-fetch');
+const axios = require('axios');
 const cheerio = require('cheerio');
+const { editSmart } = require('../utils/editSmart');
+const { backKeyboard } = require('../keyboards/backKeyboard');
+const path = require('path');
+const fs = require('fs');
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 3;
+const DATA_FILE = path.join(__dirname, '..', 'data', 'news.json');
 
-// Простая in-memory кеш-структура (для демонстрации)
-const cache = {
-  articles: [],
-  fetchedAt: 0
-};
+// simple loader: prefer remote parse, fallback to local JSON
+async function fetchArticles() {
+  // try parsing site (best-effort)
+  try {
+    const url = 'https://circusnikulin.ru/'; // сменишь, если нужна конкретная страница
+    const res = await axios.get(url, { timeout: 8000 });
+    const $ = cheerio.load(res.data);
+    const articles = [];
 
-async function fetchArticlesFromSite() {
-  // Если кеш свежий (10 минут) — возвращаем
-  const now = Date.now();
-  if (cache.articles.length && now - cache.fetchedAt < 1000 * 60 * 10) {
-    return cache.articles;
+    // примерный парсер — возможно нужно подогнать под реальную разметку
+    $('.news, .post, .news-item').each((i, el) => {
+      const title = $(el).find('h2, h3').first().text().trim();
+      const link = $(el).find('a').first().attr('href') || '';
+      const date = $(el).find('.date, time').first().text().trim();
+      const summary = $(el).find('p').first().text().trim();
+      if (title) articles.push({ title, url: link.startsWith('http') ? link : new URL(link, url).href, date, summary });
+    });
+
+    if (articles.length) {
+      // save snapshot to local
+      try { fs.writeFileSync(DATA_FILE, JSON.stringify(articles, null, 2)); } catch {}
+      return articles;
+    }
+  } catch (e) {
+    console.warn('news: remote parse failed:', e.message || e);
   }
 
-  // Попробуем парсить раздел новостей сайта
-  const url = 'https://circusnikulin.ru/'; // если есть конкретная страница — подставь
-  const res = await fetch(url, { timeout: 10000 });
-  const html = await res.text();
-  const $ = cheerio.load(html);
-
-  const articles = [];
-
-  // Ниже примерный селектор — возможно на сайте другой DOM.
-  // Нужно подправить под реальные селекторы сайта circusnikulin.ru
-  $('.news-item, .post, .news').each((i, el) => {
-    const title = $(el).find('h3, h2, .title').first().text().trim();
-    const link = $(el).find('a').first().attr('href') || '';
-    const date = $(el).find('.date, .meta, time').first().text().trim();
-    const summary = $(el).find('p').first().text().trim();
-
-    if (title) {
-      articles.push({
-        title,
-        url: link.startsWith('http') ? link : new URL(link, url).href,
-        date,
-        summary
-      });
-    }
-  });
-
-  // Fallback: если селекторы не сработали, возвращаем пустой массив
-  cache.articles = articles;
-  cache.fetchedAt = now;
-  return articles;
+  // fallback to local file
+  try {
+    const raw = fs.readFileSync(DATA_FILE, 'utf8');
+    return JSON.parse(raw);
+  } catch (e) {
+    console.warn('news: local fallback failed:', e.message || e);
+    // final fallback: sample stub
+    return [
+      { title: 'Новости: премьера новой программы', url: '#', date: '2025-12-01', summary: 'Краткое описание...' },
+      { title: 'Новости: мастер-класс от артистов', url: '#', date: '2025-11-20', summary: 'Краткое описание...' },
+      { title: 'Новости: акция на билеты', url: '#', date: '2025-11-10', summary: 'Краткое описание...' },
+      { title: 'Новости: интервью', url: '#', date: '2025-10-30', summary: 'Краткое описание...' },
+      { title: 'Новости: гастроли', url: '#', date: '2025-10-15', summary: 'Краткое описание...' },
+      { title: 'Новости: дети в цирке', url: '#', date: '2025-09-01', summary: 'Краткое описание...' }
+    ];
+  }
 }
 
-function buildNewsText(items, page, total) {
-  let text = `📰 *Новости — страница ${page+1}* \n\n`;
+function formatPage(items, page, total) {
+  let text = `📰 *Новости — страница ${page + 1}* \n\n`;
   items.forEach((a, idx) => {
-    text += `*${page*PAGE_SIZE + idx + 1}.* [${a.title}](${a.url})\n`;
-    if (a.date) text += `_ ${a.date}_\n`;
+    text += `*${page * PAGE_SIZE + idx + 1}.* ${a.title}\n`;
+    if (a.date) text += `_${a.date}_\n`;
     if (a.summary) text += `${a.summary}\n`;
+    if (a.url && a.url !== '#') text += `${a.url}\n`;
     text += `\n`;
   });
-  text += `_Всего новостей: ${total}_`;
+  text += `_Всего: ${total}_`;
   return text;
 }
 
-exports.handleNews = async (bot, input, msgId = null) => {
-  // определяем chatId и страницу (если callback_data содержит page)
-  let chatId = null;
-  let requestedPage = 0;
-
-  // если input — callback_query
-  if (input && input.data && input.message) {
-    chatId = input.message.chat.id;
-    // data может быть "news" или "news_page:2"
-    if (input.data && input.data.startsWith('news_page:')) {
-      requestedPage = parseInt(input.data.split(':')[1], 10) || 0;
-    }
+exports.handleNews = async (bot, input) => {
+  // detect page
+  let page = 0;
+  if (input?.data && input.data.startsWith('news_page:')) {
+    page = parseInt(input.data.split(':')[1], 10) || 0;
   }
 
-  // если input — message или chatId
-  if (!chatId && input && input.chat && input.chat.id) chatId = input.chat.id;
-  if (!chatId && typeof input === 'number') chatId = input;
+  const articles = await fetchArticles();
+  const total = articles.length;
+  const from = page * PAGE_SIZE;
+  const pageItems = articles.slice(from, from + PAGE_SIZE);
+  const text = formatPage(pageItems, page, total);
 
-  if (!chatId) {
-    console.error('NEWS: chatId не найден');
-    return;
-  }
-
-  // получаем статьи
-  const all = await fetchArticlesFromSite();
-  const total = all.length;
-
-  if (!total) {
-    const text = '📭 Пока нет доступных новостей (не удалось распарсить сайт).';
-    if (msgId) {
-      return bot.editMessageText(text, { chat_id: chatId, message_id: msgId });
-    }
-    return bot.sendMessage(chatId, text);
-  }
-
-  const from = requestedPage * PAGE_SIZE;
-  const items = all.slice(from, from + PAGE_SIZE);
-
-  const text = buildNewsText(items, requestedPage, total);
-
-  // inline-клавиатура для пагинации
+  // build pagination keyboard
   const buttons = [];
-  if (from + PAGE_SIZE < total) {
-    buttons.push({ text: 'Загрузить ещё', callback_data: `news_page:${requestedPage + 1}` });
-  }
-  // назад в меню
-  buttons.push({ text: '⬅️ Назад', callback_data: 'back_to_menu' });
+  if (from + PAGE_SIZE < total) buttons.push({ text: 'Загрузить ещё', callback_data: `news_page:${page + 1}` });
+  buttons.push({ text: '⬅️ Назад в меню', callback_data: 'back_to_menu' });
 
-  const reply_markup = { inline_keyboard: [buttons] };
+  const reply = { reply_markup: { inline_keyboard: [buttons] } };
 
-  if (msgId) {
-    return bot.editMessageText(text, {
-      chat_id: chatId,
-      message_id: msgId,
-      parse_mode: 'Markdown',
-      disable_web_page_preview: true,
-      reply_markup
-    });
-  }
-  return bot.sendMessage(chatId, text, { parse_mode: 'Markdown', disable_web_page_preview: true, reply_markup });
+  return editSmart(bot, input, text, reply.reply_markup);
 };
