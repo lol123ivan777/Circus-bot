@@ -4,17 +4,17 @@ exports.handleStart = async (bot, input, msgId = null) => {
 
   let chatId = null;
 
-  // Если пришёл query (callback_query)
+  // callback_query
   if (input && input.data && input.message && input.message.chat) {
     chatId = input.message.chat.id;
   }
 
-  // Если пришёл объект сообщения (msg)
+  // обычное msg
   if (!chatId && input && input.chat && input.chat.id) {
     chatId = input.chat.id;
   }
 
-  // Если передали напрямую chatId (число)
+  // если просто цифрой передали
   if (!chatId && typeof input === 'number') {
     chatId = input;
   }
@@ -34,17 +34,30 @@ exports.handleStart = async (bot, input, msgId = null) => {
 
   const { inlineMenuKeyboard } = require('../keyboards/inlineMenu');
 
-  // Если старт вызван inline-кнопкой — редактируем старое сообщение
+  // Если старт вызван inline-кнопкой
   if (msgId) {
-    return bot.editMessageCaption(caption, {
-      chat_id: chatId,
-      message_id: msgId,
-      parse_mode: 'Markdown',
-      reply_markup: inlineMenuKeyboard.reply_markup
-    });
+    try {
+      return await bot.editMessageCaption(caption, {
+        chat_id: chatId,
+        message_id: msgId,
+        parse_mode: 'Markdown',
+        reply_markup: inlineMenuKeyboard.reply_markup
+      });
+    } catch (err) {
+      // 👉 ТУТ МЫ ЛОВИМ КЛАССИЧНУЮ ОШИБКУ "message is not modified"
+      if (err.response && err.response.body && err.response.body.description &&
+          err.response.body.description.includes('message is not modified')) {
+
+        console.log('⚠️ Telegram: сообщение не изменилось, игнорируем.');
+        return;
+      }
+
+      console.error('❌ ERROR editMessageCaption:', err);
+      return;
+    }
   }
 
-  // Иначе — обычный старт через /start (отправляем фотографию + inline-клавиатуру)
+  // Старт через текст или команду /start
   return bot.sendPhoto(chatId, bannerUrl, {
     caption,
     parse_mode: 'Markdown',
