@@ -8,8 +8,6 @@ const { handleSchedule } = require('./src/handlers/schedule');
 const { handleTickets } = require('./src/handlers/tickets');
 const { handleContacts } = require('./src/handlers/contacts');
 
-const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
-
 // команда /start
 bot.onText(/\/start/, (msg) => {
   handleStart(bot, msg);
