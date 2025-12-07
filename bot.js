@@ -1,32 +1,33 @@
-cat > src/bot.js <<'EOF'
-const { Telegraf, Markup } = require('telegraf');
-const fs = require('fs');
 require('dotenv').config();
+const TelegramBot = require('node-telegram-bot-api');
 
-const bot = new Telegraf(process.env.BOT_TOKEN);
+const { mainMenuKeyboard } = require('./src/keyboards/mainMenu');
+const { handleStart } = require('./src/handlers/start');
+const { handleAbout } = require('./src/handlers/about');
+const { handleSchedule } = require('./src/handlers/schedule');
+const { handleTickets } = require('./src/handlers/tickets');
+const { handleContacts } = require('./src/handlers/contacts');
 
-// простая клавиатура (reply keyboard)
-const mainKeyboard = Markup.keyboard([
-  ['🎪 Афиша', '🎟 Купить билеты'],
-  ['📍 Контакты', '❓ FAQ']
-]).resize();
+const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
-bot.start((ctx) => {
-  ctx.reply('Добро пожаловать в бот CircusNikulin!', mainKeyboard);
+bot.onText(//start/, (msg) => handleStart(bot, msg));
+
+bot.on('message', (msg) => {
+  const text = msg.text;
+  const chatId = msg.chat.id;
+
+  if (!text) return;
+
+  if (text === '🎪 О цирке') return handleAbout(bot, chatId);
+  if (text === '📰 Новости') return bot.sendMessage(chatId, 'Новости пока в разработке, читай на сайте circusnikulin.ru', mainMenuKeyboard);
+  if (text === '🌟 Артисты') return bot.sendMessage(chatId, 'Раздел «Артисты» пока заглушка.', mainMenuKeyboard);
+  if (text === '🎭 Программы') return handleSchedule(bot, chatId);
+  if (text === '🎫 Билеты') return handleTickets(bot, chatId);
+  if (text === '📍 Контакты') return handleContacts(bot, chatId);
+
+  if (text === '⬅️ Назад в меню') {
+    return bot.sendMessage(chatId, 'Главное меню цирка Никулина:', mainMenuKeyboard);
+  }
 });
 
-// делегируем текстовые кнопки на handler'ы
-bot.on('text', async (ctx) => {
-  const t = (ctx.message.text || '').trim();
-  if (t === '🎪 Афиша') return ctx.scene?.enter ? ctx.reply('Афиша...') : ctx.reply('Открываю Афишу...');
-  if (t === '🎟 Купить билеты') return ctx.reply('Открываю раздел билетов...');
-  if (t === '📍 Контакты') return ctx.reply('Адрес: ... Телефон: ...');
-  if (t === '❓ FAQ') return ctx.reply('Часто задаваемые вопросы...');
-  // fallback
-  ctx.reply('Не понял. Используй меню.');
-});
-
-bot.launch().then(()=>console.log('Bot launched'));
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
-EOF
+console.log('Circus bot started');
