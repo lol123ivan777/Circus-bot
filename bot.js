@@ -57,11 +57,25 @@ bot.on('callback_query', async query => {
   console.log('CALLBACK ===>', data);
 
   try {
-    if (data === 'back_to_menu') return safeRun(handleStart, bot, query);
-    if (data === 'about')       return safeRun(handleAbout, bot, query);
-    if (data === 'news')        return safeRun(handleNews, bot, query);
-    if (data === 'artists')     return safeRun(handleArtists, bot, query);
-    if (data === 'schedule')    return safeRun(handleSchedule, bot, query);
+    if (data === 'back_to_menu') {
+  return safeRun(handleStart, bot, query, msgId);
+}
+
+if (data === 'about') {
+  return safeRun(handleAbout, bot, query, msgId);
+}
+
+if (data === 'news') {
+  return safeRun(handleNews, bot, query, msgId);
+}
+
+if (data === 'artists') {
+  return safeRun(handleArtists, bot, query, msgId);
+}
+
+if (data === 'schedule') {
+  return safeRun(handleSchedule, bot, query, msgId);
+}
 
     // fallback (на всякий случай)
     await bot.answerCallbackQuery(query.id, { 
