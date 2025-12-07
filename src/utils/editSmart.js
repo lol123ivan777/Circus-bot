@@ -1,21 +1,13 @@
 // src/utils/editSmart.js
 
-/**
- * Универсальная функция.
- * Автоматически определяет, нужно редактировать текст или caption,
- * или же Telegram не даёт редактировать и нужно отправить новое сообщение.
- */
-
 async function editSmart(bot, query, text, keyboard) {
-  const chatId = query.message.chat.id;
-  const messageId = query.message.message_id;
-
-  const hasCaption = !!query.message.caption;
-  const hasText = !!query.message.text;
+  const msg = query.message;
+  const chatId = msg.chat.id;
+  const messageId = msg.message_id;
 
   try {
-    if (hasCaption) {
-      // Сообщение изначально было с фото
+    // Если сообщение — фото с caption
+    if (msg.caption !== undefined) {
       return await bot.editMessageCaption(text, {
         chat_id: chatId,
         message_id: messageId,
@@ -24,8 +16,8 @@ async function editSmart(bot, query, text, keyboard) {
       });
     }
 
-    if (hasText) {
-      // Сообщение — текстовое
+    // Если текстовое сообщение
+    if (msg.text !== undefined) {
       return await bot.editMessageText(text, {
         chat_id: chatId,
         message_id: messageId,
@@ -34,15 +26,15 @@ async function editSmart(bot, query, text, keyboard) {
       });
     }
 
-    // Если у сообщения нет ни текста, ни caption — странно, но бывает
+    // На всякий случай fallback
     return await bot.sendMessage(chatId, text, {
       parse_mode: 'Markdown',
       reply_markup: keyboard
     });
 
   } catch (err) {
-    // Telegram может не дать редактировать (старое сообщение, изменённое фото, баги)
-    console.log("editSmart fallback → sendMessage:", err.message);
+    console.log("editSmart ERROR, fallback → sendMessage:");
+    console.log(err.message);
 
     return bot.sendMessage(chatId, text, {
       parse_mode: 'Markdown',
