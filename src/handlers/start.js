@@ -1,18 +1,25 @@
 // src/handlers/start.js
 
-exports.handleStart = async (bot, msg, msgId) => {
-  console.log('START RAW MSG:', JSON.stringify(msg, null, 2));
+exports.handleStart = async (bot, input, msgId = null) => {
+  console.log('START RAW INPUT:', JSON.stringify(input, null, 2));
 
-  let chatId;
+  let chatId = null;
 
-  // /start
-  if (msg.chat) {
-    chatId = msg.chat.id;
+  // Если пришёл объект сообщения (msg)
+  if (input && typeof input === 'object') {
+    if (input.chat && input.chat.id) {
+      chatId = input.chat.id;
+    }
+
+    // Если вызов через callback_query
+    if (!chatId && input.message && input.message.chat) {
+      chatId = input.message.chat.id;
+    }
   }
 
-  // inline callback
-  if (!chatId && msg.message && msg.message.chat) {
-    chatId = msg.message.chat.id;
+  // Если пользователь передал просто число (chatId)
+  if (!chatId && typeof input === 'number') {
+    chatId = input;
   }
 
   if (!chatId) {
@@ -31,20 +38,17 @@ exports.handleStart = async (bot, msg, msgId) => {
 
   const { mainMenuKeyboard } = require('../keyboards/mainMenu');
 
-  // Если это inline-редактирование
+  // Если старт вызван inline-кнопкой — редактируем старое сообщение
   if (msgId) {
-    return bot.editMessageCaption(
-      caption,
-      {
-        chat_id: chatId,
-        message_id: msgId,
-        parse_mode: 'Markdown',
-        reply_markup: mainMenuKeyboard.reply_markup
-      }
-    );
+    return bot.editMessageCaption(caption, {
+      chat_id: chatId,
+      message_id: msgId,
+      parse_mode: 'Markdown',
+      reply_markup: mainMenuKeyboard.reply_markup
+    });
   }
 
-  // /start — отправляем фото + меню
+  // Иначе — обычный старт через /start
   return bot.sendPhoto(chatId, bannerUrl, {
     caption,
     parse_mode: 'Markdown',
