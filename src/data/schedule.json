@@ -1,0 +1,22 @@
+cat > src/data/schedule.json << 'EOF'
+[
+  {
+    "date": "2025-12-22",
+    "time": "19:00",
+    "title": "Новогоднее шоу",
+    "ticket": "https://circusnikulin.ru/tickets"
+  },
+  {
+    "date": "2025-12-23",
+    "time": "12:00",
+    "title": "Семейная программа",
+    "ticket": "https://circusnikulin.ru/tickets"
+  },
+  {
+    "date": "2026-01-05",
+    "time": "19:00",
+    "title": "Зимняя программа",
+    "ticket": "https://circusnikulin.ru/tickets"
+  }
+]
+EOF
