@@ -1,8 +1,7 @@
 exports.handleStart = async (bot, msg) => {
 const chatId = msg.chat.id;
 
-const bannerUrl =
-' https://stihi.ru/pics/2017/06/18/266.jpg'; // <-- поставь свой баннер, лучше JPG/PNG
+const bannerUrl = 'https://i.imgur.com/4AiXzf8.jpeg';
 
 const caption =
 '🎪 Добро пожаловать в цирк Никулина! \n\n' +
