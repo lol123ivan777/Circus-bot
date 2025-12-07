@@ -5,7 +5,7 @@ exports.handleStart = async (bot, input) => {
   const msg = input.message || input;
   const chatId = msg.chat.id;
 
-  const bannerUrl = 'https://upload.wikimedia.org/wikipedia/commons/3/3c/Nikulin_Circus.jpg';
+  const bannerUrl = 'https://i.imgur.com/4AiXzf8.jpeg';
 
   const caption =
     '🎪 *Добро пожаловать в цирк Никулина!* \n\n' +
