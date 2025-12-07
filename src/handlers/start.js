@@ -1,5 +1,7 @@
 // src/handlers/start.js
 
+const { inlineMenuKeyboard } = require('../keyboards/inlineMenu');
+
 exports.handleStart = async (bot, input, msgId = null) => {
   console.log('START RAW INPUT:', JSON.stringify(input, null, 2));
 
@@ -36,22 +38,20 @@ exports.handleStart = async (bot, input, msgId = null) => {
     'и получить полезную информацию.\n\n' +
     'Выберите нужный раздел в меню ниже.';
 
-  const { mainMenuKeyboard } = require('../keyboards/mainMenu');
-
-  // Если старт вызван inline-кнопкой — редактируем старое сообщение
+  // === Если старт вызван inline-кнопкой — редактируем ===
   if (msgId) {
     return bot.editMessageCaption(caption, {
       chat_id: chatId,
       message_id: msgId,
       parse_mode: 'Markdown',
-      reply_markup: mainMenuKeyboard.reply_markup
+      reply_markup: inlineMenuKeyboard.reply_markup
     });
   }
 
-  // Иначе — обычный старт через /start
+  // — обычный /start
   return bot.sendPhoto(chatId, bannerUrl, {
     caption,
     parse_mode: 'Markdown',
-    reply_markup: mainMenuKeyboard.reply_markup
+    reply_markup: inlineMenuKeyboard.reply_markup
   });
 };
