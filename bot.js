@@ -1,7 +1,4 @@
-require('dotenv').config();
-const TelegramBot = require('node-telegram-bot-api');
-
-require('dotenv').config();
+require('dotenv').config({ path: './.env' });
 console.log("BOT TOKEN ===>", process.env.BOT_TOKEN);
 
 const { mainMenuKeyboard } = require('./src/keyboards/mainMenu');
