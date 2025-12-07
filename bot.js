@@ -10,8 +10,12 @@ const { handleContacts } = require('./src/handlers/contacts');
 
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
-bot.onText(//start/, (msg) => handleStart(bot, msg));
+// команда /start
+bot.onText(/\/start/, (msg) => {
+  handleStart(bot, msg);
+});
 
+// обычные сообщения
 bot.on('message', (msg) => {
   const text = msg.text;
   const chatId = msg.chat.id;
