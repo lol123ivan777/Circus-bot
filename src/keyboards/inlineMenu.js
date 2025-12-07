@@ -9,9 +9,6 @@ const inlineMenuKeyboard = {
       [
         { text: '✨ Артисты', callback_data: 'artists' },
         { text: '📅 Расписание', callback_data: 'schedule' }
-      ],
-      [
-        { text: '⬅️ Назад в меню', callback_data: 'back_to_menu' }
       ]
     ]
   }
