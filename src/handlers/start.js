@@ -3,16 +3,15 @@
 exports.handleStart = async (bot, msg, msgId) => {
   console.log('START RAW MSG:', JSON.stringify(msg, null, 2));
 
-  // НОРМАЛЬНО ОБЪЯВЛЯЕМ chatId
-  let chatId = null;
+  let chatId;
 
-  // Старт через обычное сообщение (/start)
-  if (msg.chat && msg.chat.id) {
+  // /start
+  if (msg.chat) {
     chatId = msg.chat.id;
   }
 
-  // Старт через inline-кнопку (callback_query)
-  if (!chatId && msg.message && msg.message.chat && msg.message.chat.id) {
+  // inline callback
+  if (!chatId && msg.message && msg.message.chat) {
     chatId = msg.message.chat.id;
   }
 
@@ -24,7 +23,7 @@ exports.handleStart = async (bot, msg, msgId) => {
   const bannerUrl = 'https://i.imgur.com/4AiXzf8.jpeg';
 
   const caption =
-    '🎪 *Добро пожаловать в цирк Никулина!*\n\n' +
+    '🎪 *Добро пожаловать в цирк Никулина!* \n\n' +
     'Здесь вы можете узнать расписание представлений, ' +
     'ознакомиться с артистами, просмотреть новости ' +
     'и получить полезную информацию.\n\n' +
@@ -32,17 +31,20 @@ exports.handleStart = async (bot, msg, msgId) => {
 
   const { mainMenuKeyboard } = require('../keyboards/mainMenu');
 
-  // Если вызов через inline — редактируем существующее сообщение
+  // Если это inline-редактирование
   if (msgId) {
-    return bot.editMessageCaption(caption, {
-      chat_id: chatId,
-      message_id: msgId,
-      parse_mode: 'Markdown',
-      reply_markup: mainMenuKeyboard.reply_markup
-    });
+    return bot.editMessageCaption(
+      caption,
+      {
+        chat_id: chatId,
+        message_id: msgId,
+        parse_mode: 'Markdown',
+        reply_markup: mainMenuKeyboard.reply_markup
+      }
+    );
   }
 
-  // Если через /start — отправляем новое сообщение
+  // /start — отправляем фото + меню
   return bot.sendPhoto(chatId, bannerUrl, {
     caption,
     parse_mode: 'Markdown',
