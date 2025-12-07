@@ -1,96 +1,65 @@
 // bot.js
-require('dotenv').config({ path: __dirname + '/.env' });
+require('dotenv').config();
+const TelegramBot = require('node-telegram-bot-api');
 
 if (!process.env.BOT_TOKEN) {
-  console.error('ERROR: BOT_TOKEN not found in .env');
+  console.error('ERROR: BOT_TOKEN not found in .env (см. .env.example)');
   process.exit(1);
 }
 
-console.log('BOT TOKEN ===>', process.env.BOT_TOKEN);
+const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
-const TelegramBot = require('node-telegram-bot-api');
-
-// Хэндлеры
+// handlers
 const { handleStart } = require('./src/handlers/start');
 const { handleAbout } = require('./src/handlers/about');
 const { handleNews } = require('./src/handlers/news');
 const { handleArtists } = require('./src/handlers/artists');
 const { handleSchedule } = require('./src/handlers/schedule');
 
-// Создаём бота
-const bot = new TelegramBot(process.env.BOT_TOKEN, {
-  polling: { interval: 300, autoStart: true }
-});
-
-// Универсальная безопасная обёртка
 async function safeRun(fn, ...args) {
   try {
     await fn(...args);
   } catch (err) {
     console.error('HANDLER ERROR:', err?.stack || err);
-
-    const q = args.find(a => a?.id && a?.data && a?.message);
-    if (q) {
+    // ответим пользователю, если это callback_query
+    const maybeQuery = args.find(a => a && a.id && a.data && a.message);
+    if (maybeQuery && maybeQuery.id) {
       try {
-        await bot.answerCallbackQuery(q.id, {
-          text: 'Ошибка, попробуйте ещё раз.',
-          show_alert: false
-        });
-      } catch {}
+        await bot.answerCallbackQuery(maybeQuery.id, { text: 'Ошибка: попробуйте ещё раз', show_alert: false });
+      } catch (e) { /* noop */ }
     }
   }
 }
 
-// Ошибки polling
-bot.on('polling_error', err => {
-  console.error('POLLING ERROR:', err?.message || err);
-});
+console.log('Circus Nikulin bot starting...');
 
-// /start
-bot.onText(/\/start/, msg => {
-  safeRun(handleStart, bot, msg);
-});
+// /start command
+bot.onText(/\/start/, msg => safeRun(handleStart, bot, msg));
 
-// callback_query
-bot.on('callback_query', async query => {
-  const data = query.data;
-  console.log('CALLBACK ===>', data);
+// central callback router
+bot.on('callback_query', async (query) => {
+  const data = query?.data;
+  const msgId = query?.message?.message_id;
 
-  try {
-   if (data === 'back_to_menu') 
-  return safeRun(handleStart, bot, query, query.message.message_id);
+  console.log('CALLBACK:', data);
 
-if (data === 'about') 
-  return safeRun(handleAbout, bot, query, query.message.message_id);
-
-if (data === 'news') 
-  return safeRun(handleNews, bot, query, query.message.message_id);
-
-if (data === 'artists') 
-  return safeRun(handleArtists, bot, query, query.message.message_id);
-
-if (data === 'schedule') 
-  return safeRun(handleSchedule, bot, query, query.message.message_id);
-
-    // fallback (на всякий случай)
-    await bot.answerCallbackQuery(query.id, { 
-      text: 'Команда не распознана', 
-      show_alert: false 
-    });
-
-  } catch (err) {
-    console.error('CALLBACK ERROR:', err?.stack || err);
-    try {
-      await bot.answerCallbackQuery(query.id, { 
-        text: 'Ошибка обработки', 
-        show_alert: false 
-      });
-    } catch {}
+  // routing: exact commands
+  if (data === 'back_to_menu' || data === 'main_menu') {
+    return safeRun(handleStart, bot, query, msgId);
   }
+
+  if (data === 'about') return safeRun(handleAbout, bot, query);
+  if (data && data.startsWith('news')) return safeRun(handleNews, bot, query);
+  if (data && data.startsWith('artists')) return safeRun(handleArtists, bot, query);
+  if (data === 'schedule') return safeRun(handleSchedule, bot, query);
+
+  // unknown
+  try {
+    await bot.answerCallbackQuery(query.id, { text: 'Команда не распознана', show_alert: false });
+  } catch (e) { /* noop */ }
 });
 
-// Игнорируем обычные сообщения
-bot.on('message', msg => {});
+// ignore plain messages except /start above
+bot.on('message', () => {});
 
-console.log('Circus Nikulin bot started');
 module.exports = bot;
