@@ -1,25 +1,20 @@
 // src/handlers/start.js
-
-const { inlineMenuKeyboard } = require('../keyboards/inlineMenu');
-
 exports.handleStart = async (bot, input, msgId = null) => {
-  console.log('START RAW INPUT:', JSON.stringify(input, null, 2));
+  console.log('START RAW INPUT:', JSON.stringify(input && (input.data ? input : input), null, 2));
 
   let chatId = null;
 
-  // Если пришёл объект сообщения (msg)
-  if (input && typeof input === 'object') {
-    if (input.chat && input.chat.id) {
-      chatId = input.chat.id;
-    }
-
-    // Если вызов через callback_query
-    if (!chatId && input.message && input.message.chat) {
-      chatId = input.message.chat.id;
-    }
+  // Если пришёл query (callback_query)
+  if (input && input.data && input.message && input.message.chat) {
+    chatId = input.message.chat.id;
   }
 
-  // Если пользователь передал просто число (chatId)
+  // Если пришёл объект сообщения (msg)
+  if (!chatId && input && input.chat && input.chat.id) {
+    chatId = input.chat.id;
+  }
+
+  // Если передали напрямую chatId (число)
   if (!chatId && typeof input === 'number') {
     chatId = input;
   }
@@ -30,7 +25,6 @@ exports.handleStart = async (bot, input, msgId = null) => {
   }
 
   const bannerUrl = 'https://i.imgur.com/4AiXzf8.jpeg';
-
   const caption =
     '🎪 *Добро пожаловать в цирк Никулина!* \n\n' +
     'Здесь вы можете узнать расписание представлений, ' +
@@ -38,7 +32,9 @@ exports.handleStart = async (bot, input, msgId = null) => {
     'и получить полезную информацию.\n\n' +
     'Выберите нужный раздел в меню ниже.';
 
-  // === Если старт вызван inline-кнопкой — редактируем ===
+  const { inlineMenuKeyboard } = require('../keyboards/inlineMenu');
+
+  // Если старт вызван inline-кнопкой — редактируем старое сообщение
   if (msgId) {
     return bot.editMessageCaption(caption, {
       chat_id: chatId,
@@ -48,7 +44,7 @@ exports.handleStart = async (bot, input, msgId = null) => {
     });
   }
 
-  // — обычный /start
+  // Иначе — обычный старт через /start (отправляем фотографию + inline-клавиатуру)
   return bot.sendPhoto(chatId, bannerUrl, {
     caption,
     parse_mode: 'Markdown',
