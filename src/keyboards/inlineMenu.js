@@ -8,8 +8,8 @@ const inlineMenuKeyboard = {
         { text: '📰 Новости', callback_data: 'news' }
       ],
       [
-        { text: '🌟 Артисты', callback_data: 'artists' },
-        { text: '🎭 Расписание', callback_data: 'schedule' }
+        { text: '✨ Артисты', callback_data: 'artists' },
+        { text: '📅 Расписание', callback_data: 'schedule' }
       ],
       [
         { text: '⬅️ Назад в меню', callback_data: 'back_to_menu' }
