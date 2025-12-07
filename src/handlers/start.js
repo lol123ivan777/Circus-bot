@@ -1,7 +1,7 @@
 // src/handlers/start.js
 
 exports.handleStart = async (bot, msg, msgId) => {
-  let chatId;
+  console.log('START RAW MSG:', JSON.stringify(msg, null, 2));
 
   // Если вызов через обычное сообщение (/start)
   if (msg.chat) {
