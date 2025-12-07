@@ -10,11 +10,16 @@ if (!process.env.BOT_TOKEN) {
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
 // handlers
+
 const { handleStart } = require('./src/handlers/start');
 const { handleAbout } = require('./src/handlers/about');
 const { handleNews } = require('./src/handlers/news');
 const { handleArtists } = require('./src/handlers/artists');
 const { handleSchedule } = require('./src/handlers/schedule');
+const { handleTickets } = require('./src/handlers/tickets');
+const { handleContacts } = require('./src/handlers/contacts');
+const { handlePrograms } = require('./src/handlers/programs');
+const { handleFestival } = require('./src/handlers/festival');
 
 async function safeRun(fn, ...args) {
   try {
@@ -43,15 +48,29 @@ bot.on('callback_query', async (query) => {
 
   console.log('CALLBACK:', data);
 
+
   // routing: exact commands
   if (data === 'back_to_menu' || data === 'main_menu') {
     return safeRun(handleStart, bot, query, msgId);
   }
 
   if (data === 'about') return safeRun(handleAbout, bot, query);
+
   if (data && data.startsWith('news')) return safeRun(handleNews, bot, query);
+
   if (data && data.startsWith('artists')) return safeRun(handleArtists, bot, query);
-  if (data === 'schedule') return safeRun(handleSchedule, bot, query);
+
+  if (data === 'schedule' || (data && data.startsWith('schedule_month:'))) {
+    return safeRun(handleSchedule, bot, query);
+  }
+
+  if (data === 'tickets') return safeRun(handleTickets, bot, query);
+
+  if (data === 'contacts') return safeRun(handleContacts, bot, query);
+
+  if (data === 'programs') return safeRun(handlePrograms, bot, query);
+
+  if (data === 'festival') return safeRun(handleFestival, bot, query);
 
   // unknown
   try {
