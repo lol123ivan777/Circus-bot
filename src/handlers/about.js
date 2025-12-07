@@ -1,57 +1,14 @@
-/**
- * src/handlers/about.js
- */
+// src/handlers/about.js
+const { editSmart } = require('../utils/editSmart');
+const { backKeyboard } = require('../keyboards/backKeyboard');
 
 exports.handleAbout = async (bot, input) => {
-  const isCallback = !!input?.data;       // если callbackQuery — здесь строка
-  const msg = isCallback ? input.message : input.message; // одинаково, но дальше разделим
-
-  const chatId =
-    msg?.chat?.id ||
-    input?.chat?.id ||
-    input?.from?.id;
-
-  if (!chatId) {
-    console.error('ABOUT ERROR: chatId не найден');
-    return;
-  }
-
   const text =
     '🎪 *Цирк Никулина — история и традиции* 🎪\n\n' +
     '*📍 Адрес:* Москва, Цветной бульвар, дом 13\n' +
     '*📞 Телефон:* +7 (495) 628-8349\n\n' +
-    '*🏛 Один из старейших цирков России.* Здание построено в 1880 году. ' +
-    'Первый спектакль прошёл 20 октября того же года. С тех пор цирк неоднократно реконструировался, но сохранил дух классического циркового искусства.\n\n' +
-    '*🌟 Легендарные артисты.* Среди первых звёзд — клоуны, дрессировщики и артисты со всего мира. ' +
-    'Цирк стал домом великого Юрия Никулина.\n\n' +
-    '*🎭 Что мы предлагаем:* расписание программ, информация об артистах, новости и удобное бронирование билетов.\n\n' +
-    'Выбирайте раздел в меню 👇';
+    'Цирк Никулина — одно из старейших и самых известных цирковых мест России.';
 
-  const keyboard = {
-    inline_keyboard: [
-      [{ text: '⬅️ Назад в меню', callback_data: 'back_to_menu' }]
-    ]
-  };
-
-  // Если callbackQuery — редактируем
-  if (isCallback) {
-    return bot.editMessageText(text, {
-      chat_id: chatId,
-      message_id: msg.message_id,
-      parse_mode: 'Markdown',
-      reply_markup: keyboard
-    }).catch(err => {
-      console.error('EDIT ERROR:', err);
-      return bot.sendMessage(chatId, text, {
-        parse_mode: 'Markdown',
-        reply_markup: keyboard
-      });
-    });
-  }
-
-  // Если обычное сообщение — отправляем новое
-  return bot.sendMessage(chatId, text, {
-    parse_mode: 'Markdown',
-    reply_markup: keyboard
-  });
+  // editSmart will choose caption/text/sendMessage depending on current message
+  return editSmart(bot, input, text, backKeyboard.reply_markup);
 };
