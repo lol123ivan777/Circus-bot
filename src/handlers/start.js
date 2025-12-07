@@ -10,9 +10,8 @@ exports.handleStart = async (bot, input, msgId = null) => {
   if (!chatId) {
     console.error('START: chatId not found');
     return;
-  }
-
-  const bannerUrl = 'https://upload.wikimedia.org/wikipedia/commons/3/3c/Nikulin_Circus.jpg';
+  
+  const bannerUrl = 'https://i.imgur.com/4AiXzf8.jpeg';
 
   const caption =
     '🎪 *Добро пожаловать в цирк Никулина!* \n\n' +
