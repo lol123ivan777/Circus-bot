@@ -1,12 +1,17 @@
 require('dotenv').config({ path: __dirname + '/.env' });
 console.log("BOT TOKEN ===>", process.env.BOT_TOKEN);
 
+const TelegramBot = require('node-telegram-bot-api');
+
 const { mainMenuKeyboard } = require('./src/keyboards/mainMenu');
 const { handleStart } = require('./src/handlers/start');
 const { handleAbout } = require('./src/handlers/about');
 const { handleSchedule } = require('./src/handlers/schedule');
 const { handleTickets } = require('./src/handlers/tickets');
 const { handleContacts } = require('./src/handlers/contacts');
+
+// создаём объект бота
+const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
 // команда /start
 bot.onText(/\/start/, (msg) => {
