@@ -1,4 +1,4 @@
-require('dotenv').config({ path: './.env' });
+require('dotenv').config({ path: __dirname + '/.env' });
 console.log("BOT TOKEN ===>", process.env.BOT_TOKEN);
 
 const { mainMenuKeyboard } = require('./src/keyboards/mainMenu');
