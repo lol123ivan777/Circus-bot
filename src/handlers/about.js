@@ -1,11 +1,7 @@
-const fs = require('fs');
-const path = require('path');
-const { mainMenuKeyboard } = require('../keyboards/mainMenu');
-
-function handleAbout(bot, chatId) {
-  const filePath = path.join(__dirname, '..', 'data', 'about.txt');
-  const text = fs.readFileSync(filePath, 'utf8');
-  bot.sendMessage(chatId, text, mainMenuKeyboard);
-}
-
-module.exports = { handleAbout };
+// src/handlers/about.js
+exports.handleAbout = (bot, chatId) => {
+  bot.sendMessage(
+    chatId,
+    "🎪 Цирк Никулина — легендарная площадка, где классика встречается с современностью."
+  );
+};
