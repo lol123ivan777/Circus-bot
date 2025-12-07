@@ -1,9 +1,3 @@
-module.exports.handleStart = function (bot, msg) {
-  const chatId = msg.chat.id;
-
-  bot.sendMessage(
-    chatId,
-    'Главное меню цирка Никулина:',
-    require('../keyboards/mainMenu').mainMenuKeyboard
-  );
+exports.handleStart = (bot, msg) => {
+  bot.sendMessage(msg.chat.id, 'Привет! Это тест старта.');
 };
