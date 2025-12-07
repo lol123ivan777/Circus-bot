@@ -29,7 +29,7 @@ exports.handleAbout = async (bot, input) => {
 
   const keyboard = {
     inline_keyboard: [
-      [{ text: '⬅️ Назад в меню', callback_data: 'main_menu' }]
+      [{ text: '⬅️ Назад в меню', callback_data: 'back_to_menu' }]
     ]
   };
 
