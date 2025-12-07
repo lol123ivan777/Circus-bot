@@ -1,3 +1,4 @@
+// bot.js
 // === Загрузка ENV ===
 require('dotenv').config({ path: __dirname + '/.env' });
 console.log('BOT TOKEN ===>', process.env.BOT_TOKEN);
@@ -12,6 +13,8 @@ const { handleNews } = require('./src/handlers/news');
 const { handleArtists } = require('./src/handlers/artists');
 const { handleSchedule } = require('./src/handlers/schedule');
 
+const { inlineMenuKeyboard } = require('./src/keyboards/inlineMenu');
+
 // === Создаём бота ===
 const bot = new TelegramBot(process.env.BOT_TOKEN, {
   polling: {
@@ -19,6 +22,22 @@ const bot = new TelegramBot(process.env.BOT_TOKEN, {
     autoStart: true
   }
 });
+
+// Простая обёртка для безопасного запуска async хэндлеров
+async function safeRun(fn, ...args) {
+  try {
+    await fn(...args);
+  } catch (err) {
+    console.error('HANDLER ERROR:', err && err.stack ? err.stack : err);
+    // Если это был callback_query — пробуем ответить пользователю коротким уведомлением
+    const maybeQuery = args.find(a => a && a.data && a.message);
+    if (maybeQuery && maybeQuery.id) {
+      try {
+        await bot.answerCallbackQuery(maybeQuery.id, { text: 'Ошибка: попробуйте ещё раз', show_alert: false });
+      } catch (e) { /* ничего */ }
+    }
+  }
+}
 
 // Лог ошибок polling
 bot.on('polling_error', err => {
@@ -28,55 +47,38 @@ bot.on('polling_error', err => {
 // ========================================
 // /start (генерирует стартовое сообщение)
 // ========================================
-
 bot.onText(/\/start/, msg => {
-  handleStart(bot, msg.chat.id);
+  // Передаём весь msg — хэндлер сам разберётся: /start через кнопку или как команда
+  safeRun(handleStart, bot, msg, null);
 });
 
 // ========================================
 // Обработка callback_data (inline-кнопки)
 // ========================================
-
 bot.on('callback_query', async query => {
-  try {
-    const data = query.data;
-    const chatId = query.message.chat.id;
-    const msgId = query.message.message_id;
+  // query: { id, from, data, message, ... }
+  const data = query.data;
+  const chatId = query.message && query.message.chat && query.message.chat.id;
+  const msgId = query.message && query.message.message_id;
 
-    console.log('CALLBACK ===>', data);
+  console.log('CALLBACK ===>', data);
 
-    // Главное меню
-    if (data === 'back_to_menu') {
-      return handleStart(bot, chatId, msgId); 
-    }
+  // Передаём query как первый парамет (чтобы хэндлер получил исходную структуру, если нужно)
+  if (data === 'back_to_menu') return safeRun(handleStart, bot, query, msgId);
+  if (data === 'about') return safeRun(handleAbout, bot, query, msgId);
+  if (data === 'news') return safeRun(handleNews, bot, query, msgId);
+  if (data === 'artists') return safeRun(handleArtists, bot, query, msgId);
+  if (data === 'schedule') return safeRun(handleSchedule, bot, query, msgId);
 
-    // Разделы
-    if (data === 'about') {
-      return handleAbout(bot, chatId, msgId);
-    }
-
-    if (data === 'news') {
-      return handleNews(bot, chatId, msgId);
-    }
-
-    if (data === 'artists') {
-      return handleArtists(bot, chatId, msgId);
-    }
-
-    if (data === 'schedule') {
-      return handleSchedule(bot, chatId, msgId);
-    }
-
-  } catch (err) {
-    console.error('CALLBACK ERROR:', err);
-  }
+  // Пагинация и другие callback'ы будут обрабатываться внутри соответствующих хэндлеров.
 });
 
 // ========================================
 // Фолбэк на сообщения (игнор)
 bot.on('message', msg => {
-  // Игнорим всё, чтобы не срать в чат
+  // ничего не делаем с простыми сообщениями — только кнопки/команды
 });
 
 // ========================================
 console.log('Circus Nikulin bot started');
+module.exports = bot;
