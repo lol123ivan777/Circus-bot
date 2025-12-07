@@ -1,6 +1,13 @@
 // bot.js
 // === Загрузка ENV ===
 require('dotenv').config({ path: __dirname + '/.env' });
+
+// Проверка токена — если нет, сразу падаем с понятным сообщением
+if (!process.env.BOT_TOKEN) {
+  console.error('ERROR: BOT_TOKEN not found in .env. Add BOT_TOKEN=xxx and restart.');
+  process.exit(1);
+}
+
 console.log('BOT TOKEN ===>', process.env.BOT_TOKEN);
 
 // === Telegram Bot ===
@@ -13,8 +20,6 @@ const { handleNews } = require('./src/handlers/news');
 const { handleArtists } = require('./src/handlers/artists');
 const { handleSchedule } = require('./src/handlers/schedule');
 
-const { inlineMenuKeyboard } = require('./src/keyboards/inlineMenu');
-
 // === Создаём бота ===
 const bot = new TelegramBot(process.env.BOT_TOKEN, {
   polling: {
@@ -23,32 +28,40 @@ const bot = new TelegramBot(process.env.BOT_TOKEN, {
   }
 });
 
-// Простая обёртка для безопасного запуска async хэндлеров
+// Простая async-обёртка для безопасного запуска хэндлеров
 async function safeRun(fn, ...args) {
   try {
     await fn(...args);
   } catch (err) {
+    // Логируем полный стек — пригодится при отладке
     console.error('HANDLER ERROR:', err && err.stack ? err.stack : err);
-    // Если это был callback_query — пробуем ответить пользователю коротким уведомлением
-    const maybeQuery = args.find(a => a && a.data && a.message);
+
+    // Если вызов пришёл из callback_query — ответим аккуратно пользователю
+    const maybeQuery = args.find(a => a && a.id && a.data && a.message);
     if (maybeQuery && maybeQuery.id) {
       try {
-        await bot.answerCallbackQuery(maybeQuery.id, { text: 'Ошибка: попробуйте ещё раз', show_alert: false });
-      } catch (e) { /* ничего */ }
+        await bot.answerCallbackQuery(maybeQuery.id, {
+          text: 'Произошла ошибка, попробуйте ещё раз.',
+          show_alert: false
+        });
+      } catch (e) {
+        // Ничего не делаем — это вторичная ошибка при ответе
+        console.error('Failed to answer callback query:', e && e.message ? e.message : e);
+      }
     }
   }
 }
 
 // Лог ошибок polling
 bot.on('polling_error', err => {
-  console.error('POLLING ERROR:', err.message || err);
+  console.error('POLLING ERROR:', err && err.message ? err.message : err);
 });
 
 // ========================================
 // /start (генерирует стартовое сообщение)
 // ========================================
+// Передаём весь msg в handleStart — он уже умеет разбирать msg / callback input
 bot.onText(/\/start/, msg => {
-  // Передаём весь msg — хэндлер сам разберётся: /start через кнопку или как команда
   safeRun(handleStart, bot, msg, null);
 });
 
@@ -56,29 +69,43 @@ bot.onText(/\/start/, msg => {
 // Обработка callback_data (inline-кнопки)
 // ========================================
 bot.on('callback_query', async query => {
-  // query: { id, from, data, message, ... }
-  const data = query.data;
-  const chatId = query.message && query.message.chat && query.message.chat.id;
-  const msgId = query.message && query.message.message_id;
+  const data = query && query.data;
+  const chatId = query && query.message && query.message.chat && query.message.chat.id;
+  const msgId = query && query.message && query.message.message_id;
 
   console.log('CALLBACK ===>', data);
 
-  // Передаём query как первый парамет (чтобы хэндлер получил исходную структуру, если нужно)
-  if (data === 'back_to_menu') return safeRun(handleStart, bot, query, msgId);
-  if (data === 'about') return safeRun(handleAbout, bot, query, msgId);
-  if (data === 'news') return safeRun(handleNews, bot, query, msgId);
-  if (data === 'artists') return safeRun(handleArtists, bot, query, msgId);
-  if (data === 'schedule') return safeRun(handleSchedule, bot, query, msgId);
+  try {
+    // Разбор известных callback'ов
+    if (data === 'back_to_menu') return safeRun(handleStart, bot, query, msgId);
+    if (data === 'about') return safeRun(handleAbout, bot, query, msgId);
+    if (data === 'news') return safeRun(handleNews, bot, query, msgId);
+    if (data === 'artists') return safeRun(handleArtists, bot, query, msgId);
+    if (data === 'schedule') return safeRun(handleSchedule, bot, query, msgId);
 
-  // Пагинация и другие callback'ы будут обрабатываться внутри соответствующих хэндлеров.
+    // Если это пагинация или другие callback'ы — передаём всем хэндлерам (они должны внутри решать)
+    // Но если ничего не подошло — корректно отвечаем пользователю
+    await bot.answerCallbackQuery(query.id, { text: 'Действие не распознано', show_alert: false });
+  } catch (err) {
+    // Безопасная обработка ошибок — используем safeRun (чтобы унифицировать)
+    console.error('CALLBACK ERROR (outer):', err && err.stack ? err.stack : err);
+    try {
+      if (query && query.id) {
+        await bot.answerCallbackQuery(query.id, { text: 'Ошибка обработки, попробуйте снова', show_alert: false });
+      }
+    } catch (e) { /* noop */ }
+  }
 });
 
 // ========================================
-// Фолбэк на сообщения (игнор)
+// Фолбэк на обычные сообщения (игнорируем,
+// чтобы чат не засирался спамом от прошлых кнопок)
+// ========================================
 bot.on('message', msg => {
-  // ничего не делаем с простыми сообщениями — только кнопки/команды
+  // intentionally empty
 });
 
 // ========================================
 console.log('Circus Nikulin bot started');
+
 module.exports = bot;
