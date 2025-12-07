@@ -12,7 +12,7 @@ exports.handleStart = async (bot, input, msgId = null) => {
     return;
   }
 
-  const bannerUrl = 'https://circusnikulin.ru/local/templates/main/img/logo.jpg'; //
+  const bannerUrl = 'https://upload.wikimedia.org/wikipedia/commons/3/3c/Nikulin_Circus.jpg';
 
   const caption =
     '🎪 *Добро пожаловать в цирк Никулина!* \n\n' +
