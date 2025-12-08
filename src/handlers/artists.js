@@ -1,7 +1,7 @@
 exports.handleArtists = async (bot, input) => {
   const text =
-    "✨ *Артисты цирка*\n\n" +
-    "Выберите категорию или листайте вниз.";
+"✨ *Артисты цирка*\n\n" +
+"Выберите категорию или листайте вниз.";
 
   return go(bot, input, text, {
     inline_keyboard: [
