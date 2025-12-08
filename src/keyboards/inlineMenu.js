@@ -11,6 +11,9 @@ const inlineMenuKeyboard = {
         { text: '📅 Расписание', callback_data: 'schedule' }
       ],
       [
+        { text: '🎟 Билеты', callback_data: 'tickets' }
+      ],
+      [
         { text: '🐅 Жанры цирка', callback_data: 'genres' }
       ],
       [
