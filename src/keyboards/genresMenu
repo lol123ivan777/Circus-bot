@@ -12,7 +12,7 @@ const genresMenu = {
         { text: '🦅 Воздушные гимнасты', callback_data: 'genre:aerial' }
       ],
       [
-        { text: '🤸 Акробатика', callback_data: 'genre:acrobatics' }
+        { text: '🤸 Акробаика', callback_data: 'genre:acrobatics' }
       ],
       [
         { text: '📏 Эквилибристика', callback_data: 'genre:equilibrium' }
