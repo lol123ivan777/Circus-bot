@@ -1,31 +1,47 @@
-async function editSmart(bot, input, text, keyboard = null) {
+// src/utils/editSmart.js
+
+async function editSmart(bot, input, text, extra = {}) {
+  // extra: { inline_keyboard?: [...] }
+
+  const chatId =
+    input?.message?.chat?.id ??
+    input?.chat?.id;
+
+  const messageId = input?.message?.message_id;
+
+  if (!chatId) {
+    console.error('editSmart: не смог получить chatId', input);
+    return;
+  }
+
+  const opts = {
+    parse_mode: 'Markdown',
+    reply_markup: {
+      inline_keyboard: extra.inline_keyboard || []
+    }
+  };
+
   try {
-    const chatId = input.message?.chat?.id || input.chat?.id;
-    const messageId = input.message?.message_id;
-
-    const options = { parse_mode: "Markdown" };
-    if (keyboard) options.reply_markup = keyboard;
-
+    // Если это callback_query с message_id → редактируем
     if (messageId) {
       return await bot.editMessageText(text, {
         chat_id: chatId,
         message_id: messageId,
-        ...options
+        ...opts
       });
     }
 
-    return await bot.sendMessage(chatId, text, options);
+    // Иначе отправляем новое сообщение
+    return await bot.sendMessage(chatId, text, opts);
 
   } catch (err) {
-    console.error("editSmart ERROR:", err);
+    console.error('editSmart ERROR:', err);
+
+    // Фоллбек: пробуем хотя бы отправить новое сообщение
     try {
-      const chatId = input.message?.chat?.id || input.chat?.id;
-      return await bot.sendMessage(chatId, text, {
-        parse_mode: "Markdown",
-        reply_markup: keyboard || undefined
-      });
+      return await bot.sendMessage(chatId, text, opts);
     } catch (inner) {
-      console.error("editSmart FALLBACK ERROR:", inner);
+      console.error('editSmart FALLBACK ERROR:', inner);
     }
   }
 }
