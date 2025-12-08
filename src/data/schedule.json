@@ -1,4 +1,3 @@
-cat > src/data/schedule.json << 'EOF'
 [
   {
     "date": "2025-12-22",
@@ -19,4 +18,3 @@ cat > src/data/schedule.json << 'EOF'
     "ticket": "https://circusnikulin.ru/tickets"
   }
 ]
-EOF
