@@ -1,20 +1,21 @@
 // src/handlers/start.js
-
 const { inlineMenuKeyboard } = require('../keyboards/inlineMenu');
+const editSmart = require('../utils/editSmart');
 
 exports.handleStart = async (bot, input) => {
+  const isCallback = !!input.data;
   const msg = input.message || input;
   const chatId = msg.chat.id;
 
-  return bot.sendPhoto(
-    chatId,
-    'https://i.imgur.com/4AiXzf8.jpeg',
-    {
-      caption:
-        '🎪 *Цирк Никулина*\n\n' +
-        'Добро пожаловать! Выберите раздел ниже.',
-      parse_mode: 'Markdown',
-      reply_markup: inlineMenuKeyboard.reply_markup
-    }
-  );
+  const text =
+    '🎪 *Цирк Никулина*\n\n' +
+    'Выберите раздел ниже.';
+
+  // Если вызов /start → создаём новое сообщение
+  // Если callback → редактируем существующее
+  const targetInput = isCallback ? input : { chat: { id: chatId } };
+
+  return editSmart(bot, targetInput, text, {
+    inline_keyboard: inlineMenuKeyboard.reply_markup.inline_keyboard
+  });
 };
