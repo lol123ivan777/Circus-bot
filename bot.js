@@ -20,6 +20,7 @@ const { handleTickets } = require('./src/handlers/tickets');
 const { handleContacts } = require('./src/handlers/contacts');
 const { handlePrograms } = require('./src/handlers/programs');
 const { handleFestival } = require('./src/handlers/festival');
+const { handleGenres, handleGenreItem } = require('./src/handlers/genres');
 
 async function safeRun(fn, ...args) {
   try {
@@ -71,6 +72,13 @@ bot.on('callback_query', async (query) => {
   if (data === 'programs') return safeRun(handlePrograms, bot, query);
 
   if (data === 'festival') return safeRun(handleFestival, bot, query);
+
+if (data === 'genres') return safeRun(handleGenres, bot, query);
+
+if (data.startsWith('genre:')) {
+  const id = data.split(':')[1];
+  return safeRun(handleGenreItem, bot, query, id);
+}
 
   // unknown
   try {
