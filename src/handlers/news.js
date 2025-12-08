@@ -1,7 +1,7 @@
 exports.handleNews = async (bot, input) => {
   const text =
-    "📰 *Новости*\n\n" +
-    "Последние события цирка.";
+"📰 *Новости цирка*\n\n" +
+"Последние события.";
 
   return go(bot, input, text, {
     inline_keyboard: [
