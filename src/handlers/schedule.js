@@ -1,7 +1,7 @@
 // src/handlers/schedule.js
 const path = require('path');
 const fs = require('fs');
-const { editSmart } = require('../utils/editSmart');
+const editSmart = require('../utils/editSmart');
 
 const DATA_FILE = path.join(__dirname, '..', 'data', 'schedule.json');
 
@@ -82,7 +82,6 @@ exports.handleSchedule = async (bot, input) => {
   const data = input?.data;
   const schedule = loadSchedule();
 
-  // 1) Показать список месяцев
   if (!data || data === 'schedule') {
     const months = buildMonthList(schedule);
 
@@ -100,7 +99,6 @@ exports.handleSchedule = async (bot, input) => {
     return editSmart(bot, input, text, { inline_keyboard });
   }
 
-  // 2) Конкретный месяц
   if (data.startsWith('schedule_month:')) {
     const monthKey = data.split(':')[1];
     const text = formatEventsForMonth(schedule, monthKey);
@@ -113,7 +111,6 @@ exports.handleSchedule = async (bot, input) => {
     return editSmart(bot, input, text, { inline_keyboard });
   }
 
-  // fallback
   return editSmart(bot, input, '*Расписание временно недоступно*', {
     inline_keyboard: [[{ text: '⬅️ Назад в меню', callback_data: 'back_to_menu' }]]
   });
