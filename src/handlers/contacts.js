@@ -1,4 +1,3 @@
-// src/handlers/contacts.js
 const { editSmart } = require('../utils/editSmart');
 
 exports.handleContacts = async (bot, input) => {
@@ -20,7 +19,7 @@ exports.handleContacts = async (bot, input) => {
   const inline_keyboard = [
     [{ text: "🌐 Открыть сайт", url: "https://circusnikulin.ru/" }],
     [{ text: "📍 Яндекс.Карты", url: "https://yandex.ru/maps/-/CCUuFCoxcB" }],
-    [{ text: "⬅️ Назад в меню", callback_data: "back_to_menu" }]
+    [{ text: "⬅️ Назад", callback_data: "back_to_menu" }]
   ];
 
   return editSmart(bot, input, text, { inline_keyboard });
