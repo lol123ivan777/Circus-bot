@@ -2,7 +2,7 @@
 
 const path = require('path');
 const fs = require('fs');
-const { editSmart } = require('../utils/editSmart');
+const editSmart = require('../utils/editSmart');
 
 const DATA_FILE = path.join(__dirname, '..', 'data', 'schedule.json');
 
