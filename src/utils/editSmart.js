@@ -30,4 +30,4 @@ async function editSmart(bot, input, text, keyboard = null) {
   }
 }
 
-module.exports = { editSmart };
+module.exports = editSmart;
