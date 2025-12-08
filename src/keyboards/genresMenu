@@ -1,0 +1,45 @@
+// src/keyboards/genresMenu.js
+const genresMenu = {
+  reply_markup: {
+    inline_keyboard: [
+      [
+        { text: '🤹 Жонглирование', callback_data: 'genre:juggling' }
+      ],
+      [
+        { text: '🎭 Клоунада', callback_data: 'genre:clown' }
+      ],
+      [
+        { text: '🦅 Воздушные гимнасты', callback_data: 'genre:aerial' }
+      ],
+      [
+        { text: '🤸 Акробатика', callback_data: 'genre:acrobatics' }
+      ],
+      [
+        { text: '📏 Эквилибристика', callback_data: 'genre:equilibrium' }
+      ],
+      [
+        { text: '🐅 Дрессировщики тигров', callback_data: 'genre:tigers' }
+      ],
+      [
+        { text: '🐎 Наездники', callback_data: 'genre:riders' }
+      ],
+      [
+        { text: '🪢 Канатоходцы', callback_data: 'genre:rope' }
+      ],
+      [
+        { text: '🪵 Русская палка', callback_data: 'genre:pole' }
+      ],
+      [
+        { text: '🚀 Воздушный полёт (трапеция)', callback_data: 'genre:flight' }
+      ],
+      [
+        { text: '🛼 Подкидные доски', callback_data: 'genre:boards' }
+      ],
+      [
+        { text: '⬅️ Назад в меню', callback_data: 'back_to_menu' }
+      ]
+    ]
+  }
+};
+
+module.exports = { genresMenu };
