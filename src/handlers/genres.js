@@ -1,6 +1,7 @@
 // src/handlers/genres.js
 const editSmart = require('../utils/editSmart');
 
+// твоё описание жанров
 const GENRE_DATA = {
   juggling: {
     title: '🎪 Жонглирование',
@@ -13,7 +14,7 @@ const GENRE_DATA = {
     title: '🤡 Клоунада',
     text:
       '*Клоунада* — комический жанр циркового искусства.\n' +
-      'Клоуны работают с публикой, создают атмосферу праздника и соединяют номера между собой.\n\n' +
+      'Клоуны работают с публикой, создают атмосферу праздника.\n\n' +
       'Юмор, пластика и контакт со зрителем — основа клоунады.'
   },
   aerial: {
@@ -25,11 +26,11 @@ const GENRE_DATA = {
   }
 };
 
-// меню жанров
+// ===== 1. МЕНЮ С ЖАНРАМИ =====
 exports.handleGenres = async (bot, input) => {
   const text =
     '🎭 *Жанры циркового искусства*\n\n' +
-    'Выберите интересующий жанр.';
+    'Выберите жанр, а затем попробуйте нейросетевую визуализацию.';
 
   return editSmart(bot, input, text, {
     inline_keyboard: [
@@ -41,7 +42,7 @@ exports.handleGenres = async (bot, input) => {
   });
 };
 
-// показ конкретного жанра
+// ===== 2. ПОКАЗ КОНКРЕТНОГО ЖАНРА =====
 exports.handleGenreItem = async (bot, query) => {
   const genreId = query.data.split(':')[1];
   const genre = GENRE_DATA[genreId];
@@ -49,8 +50,7 @@ exports.handleGenreItem = async (bot, query) => {
   if (!genre) {
     return editSmart(bot, query, '*Жанр временно недоступен.*', {
       inline_keyboard: [
-        [{ text: '⬅️ Назад к жанрам', callback_data: 'genres' }],
-        [{ text: '⬅️ В меню', callback_data: 'back_to_menu' }]
+        [{ text: '⬅️ Назад', callback_data: 'genres' }]
       ]
     });
   }
@@ -59,8 +59,51 @@ exports.handleGenreItem = async (bot, query) => {
 
   return editSmart(bot, query, text, {
     inline_keyboard: [
-      [{ text: '⬅️ Назад к жанрам', callback_data: 'genres' }],
-      [{ text: '⬅️ В меню', callback_data: 'back_to_menu' }]
+      [{ text: '✨ Сгенерировать изображение', callback_data: `genre_ai:${genreId}` }],
+      [{ text: '⬅️ Назад', callback_data: 'genres' }]
     ]
   });
+};
+
+// ===== 3. СПРОСИТЬ У ПОЛЬЗОВАТЕЛЯ ЗАПРОС ДЛЯ ИИ =====
+exports.handleGenreAIRequest = async (bot, query) => {
+  const genreId = query.data.split(':')[1];
+
+  const text =
+    '✨ *ИИ-визуализация жанра*\n\n' +
+    'Введите короткий запрос, например:\n' +
+    '_“Жонглер с огненными булавами”_\n\n' +
+    'После ввода я сгенерирую изображение.';
+
+  // ставим флаг ожидания
+  bot._waitingForPrompt = { genreId, chatId: query.message.chat.id };
+
+  return editSmart(bot, query, text, {
+    inline_keyboard: [
+      [{ text: '⬅️ Назад', callback_data: `genre:${genreId}` }]
+    ]
+  });
+};
+
+// ===== 4. ОБРАБОТКА СООБЩЕНИЯ С ТЕКСТОМ ДЛЯ ГЕНЕРАЦИИ =====
+exports.handleGenreAIGenerate = async (bot, msg) => {
+  const session = bot._waitingForPrompt;
+  if (!session) return;
+
+  if (msg.chat.id !== session.chatId) return;
+
+  const userPrompt = msg.text;
+  const genreId = session.genreId;
+
+  bot._waitingForPrompt = null;
+
+  const finalPrompt = `Цирковой жанр ${genreId}. ${userPrompt}. Стиль — реалистичное фото.`;
+
+  // здесь будет твоя генерация с Sorra/Gemini позже
+  // пока — заглушка с текстом
+  return bot.sendMessage(
+    msg.chat.id,
+    '🖼 *Изображение генерируется...*\n\n(ИИ-вставка появится здесь позже)',
+    { parse_mode: 'Markdown' }
+  );
 };
