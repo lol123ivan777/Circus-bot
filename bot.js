@@ -52,6 +52,8 @@ bot.on('callback_query', async (query) => {
   if (data === 'about')    return safeRun(handleAbout, bot, query);
   if (data === 'news')     return safeRun(handleNews, bot, query);
   if (data === 'artists')  return safeRun(handleArtists, bot, query);
+  if (data.startsWith("artists_page_")) return safeRun(handleArtistsPage, bot, query);
+
   if (data === 'schedule') return safeRun(handleSchedule, bot, query);
   if (data === 'genres')   return safeRun(handleGenres, bot, query);
   if (data && data.startsWith('genre:')) {
