@@ -44,25 +44,36 @@ console.log('Circus Nikulin bot starting...');
 bot.onText(/\/start/, msg => safeRun(handleStart, bot, msg));
 
 // центральный роутер callback_query
-const { handleStart } = require('./src/handlers/start');
+// central callback router
+bot.on('callback_query', async (query) => {
+  const data = query?.data;
 
-const { handleAbout } = require('./src/handlers/about');
+  console.log('CALLBACK:', data);
 
-const { handleNews } = require('./src/handlers/news');
+  // ===== ОСНОВНЫЕ РАЗДЕЛЫ =====
 
-const { handleArtists, handleArtistsPage } = require('./src/handlers/artists');
+  if (data === "about") return safeRun(handleAbout, bot, query);
+  if (data === "news") return safeRun(handleNews, bot, query);
+  if (data === "artists") return safeRun(handleArtists, bot, query);
+  if (data.startsWith("artists_page_")) return safeRun(handleArtistsPage, bot, query);
+  if (data === "schedule") return safeRun(handleSchedule, bot, query);
 
-const { handleSchedule } = require('./src/handlers/schedule');
+  if (data === "genres") return safeRun(handleGenres, bot, query);
+  if (data.startsWith("genre:")) return safeRun(handleGenreItem, bot, query);
 
-const { handleTickets } = require('./src/handlers/tickets');
+  if (data === "tickets") return safeRun(handleTickets, bot, query);
+  if (data === "contacts") return safeRun(handleContacts, bot, query);
 
-const { handleContacts } = require('./src/handlers/contacts');
+  if (data === "programs") return safeRun(handlePrograms, bot, query);
+  if (data === "festival") return safeRun(handleFestival, bot, query);
 
-const { handlePrograms } = require('./src/handlers/programs');
+  if (data === "back_to_menu") return safeRun(handleStart, bot, query);
 
-const { handleFestival } = require('./src/handlers/festival');
-
-const { handleGenres, handleGenreItem } = require('./src/handlers/genres');
+  // ===== неизвестная команда =====
+  try {
+    await bot.answerCallbackQuery(query.id, { text: 'Команда не распознана', show_alert: false });
+  } catch (e) {}
+});
 
   try {
     await bot.answerCallbackQuery(query.id, {
