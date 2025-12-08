@@ -1,25 +1,36 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-REPO_DIR="$HOME/circusbot"   # здесь путь к твоему репо
+REPO_DIR="$HOME/circus-bot"
 BRANCH="main"
 LOGFILE="$HOME/autopull.log"
+NODE_FILE="bot.js"
 
-cd "$REPO_DIR" || exit
+cd "$REPO_DIR" || {
+  echo "Ошибка: Папка $REPO_DIR не найдена" >> "$LOGFILE"
+  exit 1
+}
 
-while true; do
-    git fetch origin "$BRANCH"
+echo "===== Autopull стартовал $(date) =====" >> "$LOGFILE"
 
-    LOCAL=$(git rev-parse "$BRANCH")
-    REMOTE=$(git rev-parse "origin/$BRANCH")
+while true
+do
+  echo "--- $(date) проверка обновлений ---" >> "$LOGFILE"
 
-    if [ "$LOCAL" != "$REMOTE" ]; then
-        echo "$(date): Обновление найдено. Тяну..." >> "$LOGFILE"
-        git pull
-        pkill node
-        node bot.js &
-        echo "$(date): Перезапустил бота" >> "$LOGFILE"
-    fi
+  git fetch origin "$BRANCH" >> "$LOGFILE" 2>&1
 
-    sleep 4
+  LOCAL=$(git rev-parse "$BRANCH")
+  REMOTE=$(git rev-parse "origin/$BRANCH")
+
+  if [ "$LOCAL" != "$REMOTE" ]; then
+    echo "$(date) >>> Обновления найдены" >> "$LOGFILE"
+    git pull >> "$LOGFILE" 2>&1
+
+    # убить старый бот
+    pkill -f "$NODE_FILE"
+
+    # запустить новый бот
+    node "$NODE_FILE" >> "$LOGFILE" 2>&1 &
+  fi
+
+  sleep 5
 done
-
