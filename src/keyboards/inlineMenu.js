@@ -23,6 +23,9 @@ const inlineMenuKeyboard = {
       ],
       [
         { text: '☎️  Контакты', callback_data: 'contacts' }
+        
+          text: '📱 Web-приложение', 
+          web_app: { url: 'https://circus-bot.vercel.app/' }
       ]
     ]
   }
