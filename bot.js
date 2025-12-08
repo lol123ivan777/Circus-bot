@@ -13,7 +13,7 @@ const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 const { handleStart } = require('./src/handlers/start');
 const { handleAbout } = require('./src/handlers/about');
 const { handleNews } = require('./src/handlers/news');
-const { handleArtists } = require('./src/handlers/artists');
+const { handleArtists, handleArtistsPage } = require('./src/handlers/artists');
 const { handleSchedule } = require('./src/handlers/schedule');
 const { handleTickets } = require('./src/handlers/tickets');
 const { handleContacts } = require('./src/handlers/contacts');
@@ -26,10 +26,11 @@ async function safeRun(fn, ...args) {
     await fn(...args);
   } catch (err) {
     console.error('HANDLER ERROR:', err?.stack || err);
-    const maybeQuery = args.find(a => a && a.id && a.data && a.message);
-    if (maybeQuery && maybeQuery.id) {
+
+    const query = args.find(a => a && a.id && a.data && a.message);
+    if (query) {
       try {
-        await bot.answerCallbackQuery(maybeQuery.id, {
+        await bot.answerCallbackQuery(query.id, {
           text: 'Ошибка: попробуйте ещё раз',
           show_alert: false
         });
@@ -43,19 +44,20 @@ console.log('Circus Nikulin bot starting...');
 // /start командa
 bot.onText(/\/start/, msg => safeRun(handleStart, bot, msg));
 
-// центральный роутер callback_query
-// central callback router
+
+// ======================
+// Центральный роутер
+// ======================
 bot.on('callback_query', async (query) => {
   const data = query?.data;
-
-  console.log('CALLBACK:', data);
-
-  // ===== ОСНОВНЫЕ РАЗДЕЛЫ =====
+  console.log("CALLBACK:", data);
 
   if (data === "about") return safeRun(handleAbout, bot, query);
   if (data === "news") return safeRun(handleNews, bot, query);
+
   if (data === "artists") return safeRun(handleArtists, bot, query);
   if (data.startsWith("artists_page_")) return safeRun(handleArtistsPage, bot, query);
+
   if (data === "schedule") return safeRun(handleSchedule, bot, query);
 
   if (data === "genres") return safeRun(handleGenres, bot, query);
@@ -69,23 +71,18 @@ bot.on('callback_query', async (query) => {
 
   if (data === "back_to_menu") return safeRun(handleStart, bot, query);
 
-  // ===== неизвестная команда =====
-  try {
-    await bot.answerCallbackQuery(query.id, { text: 'Команда не распознана', show_alert: false });
-  } catch (e) {}
-});
-
   try {
     await bot.answerCallbackQuery(query.id, {
-      text: 'Команда не распознана',
+      text: "Команда не распознана",
       show_alert: false
     });
   } catch (e) {}
 });
 
-// игнорируем обычные сообщения кроме /start
-bot.on('message', (msg) => {
-  if (!msg.text || msg.text.startsWith('/')) return;
+
+// игнор обычных сообщений
+bot.on("message", msg => {
+  if (!msg.text || msg.text.startsWith("/")) return;
 });
 
 module.exports = bot;
