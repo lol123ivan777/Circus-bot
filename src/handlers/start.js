@@ -1,6 +1,6 @@
 // src/handlers/start.js
 const { inlineMenuKeyboard } = require('../keyboards/inlineMenu');
-const editSmart = require('../utils/editSmart');
+const { editSmart } = require('../utils/editSmart');
 
 const START_PHOTO_URL = 'https://i.imgur.com/4AiXzf8.jpeg';
 
