@@ -72,6 +72,10 @@ if (data.startsWith("schedule_month:")) return safeRun(handleSchedule, bot, quer
 
   if (data === "back_to_menu") return safeRun(handleStart, bot, query);
 
+if (data === "genres") return safeRun(handleGenres, bot, query);
+if (data.startsWith("genre:")) return safeRun(handleGenreItem, bot, query);
+if (data.startsWith("genre_mix:")) return safeRun(handleGenreMix, bot, query);
+
   try {
     await bot.answerCallbackQuery(query.id, {
       text: "Команда не распознана",
