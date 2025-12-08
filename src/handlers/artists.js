@@ -1,9 +1,11 @@
+const editSmart = require('../utils/editSmart');
+
 exports.handleArtists = async (bot, input) => {
   const text =
 "✨ *Артисты цирка*\n\n" +
-"Выберите категорию или листайте вниз.";
+"Артисты Цирка Никулина на Цветном бульваре .";
 
-  return go(bot, input, text, {
+  return editSmart(bot, input, text, {
     inline_keyboard: [
       [{ text: "Загрузить ещё", callback_data: "artists_more" }],
       [{ text: "⬅️ Назад", callback_data: "back_to_menu" }]
