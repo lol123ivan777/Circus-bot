@@ -4,19 +4,25 @@ const inlineMenuKeyboard = {
   reply_markup: {
     inline_keyboard: [
       [
-        { text: '🎪 О цирке', callback_data: 'about' },
-        { text: '📰 Новости', callback_data: 'news' }
+        { text: '🎪  О цирке', callback_data: 'about' }
       ],
       [
-        { text: '✨ Артисты', callback_data: 'artists' },
-        { text: '📅 Расписание', callback_data: 'schedule' }
+        { text: '📰  Новости', callback_data: 'news' }
       ],
       [
-        { text: '🐅 Жанры', callback_data: 'genres' },
-        { text: '🎟 Билеты', callback_data: 'tickets' }
+        { text: '✨  Артисты', callback_data: 'artists' }
       ],
       [
-        { text: '☎️ Контакты', callback_data: 'contacts' }
+        { text: '📅  Расписание', callback_data: 'schedule' }
+      ],
+      [
+        { text: '🐅  Жанры', callback_data: 'genres' }
+      ],
+      [
+        { text: '🎟  Билеты', callback_data: 'tickets' }
+      ],
+      [
+        { text: '☎️  Контакты', callback_data: 'contacts' }
       ]
     ]
   }
