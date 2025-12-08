@@ -11,9 +11,11 @@ exports.handleContacts = async (bot, input) => {
     'TG: https://t.me/nikulin_circus';
 
   return editSmart(bot, input, text, {
+    // отключаем parse_mode, чтобы Telegram не плевался
+    parse_mode: undefined,
     inline_keyboard: [
-      [{ text: '🌐 Сайт', url: 'https://circusnikulin.ru/' }],
-      [{ text: '⬅️ Назад в меню', callback_data: 'back_to_menu' }]
+      [{ text: '🌐 Официальный сайт', url: 'https://circusnikulin.ru/' }],
+      [{ text: '⬅️ Назад', callback_data: 'back_to_menu' }]
     ]
   });
 };
