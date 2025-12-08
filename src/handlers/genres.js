@@ -1,5 +1,7 @@
+const editSmart = require('../utils/editSmart');
+
 exports.handleGenres = async (bot, input) => {
-  return go(bot, input,
+  return editSmart(bot, input,
 "🎭 *Жанры циркового искусства*\n\n" +
 "Выберите интересующий жанр.",
   {
