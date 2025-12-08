@@ -1,3 +1,5 @@
+const editSmart = require('../utils/editSmart');
+
 exports.handleContacts = async (bot, input) => {
   const text =
 "📞 *Контакты*\n\n" +
@@ -7,7 +9,7 @@ exports.handleContacts = async (bot, input) => {
 "VK: https://vk.com/circusnikulin\n" +
 "TG: https://t.me/nikulin_circus";
 
-  return go(bot, input, text, {
+  return editSmart(bot, input, text, {
     parse_mode: "MarkdownV2",
     inline_keyboard: [
       [{ text: "🌐 Сайт", url: "https://circusnikulin.ru/" }],
