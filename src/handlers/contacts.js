@@ -1,3 +1,4 @@
+// src/handlers/contacts.js
 const { editSmart } = require('../utils/editSmart');
 
 exports.handleContacts = async (bot, input) => {
@@ -22,5 +23,6 @@ exports.handleContacts = async (bot, input) => {
     [{ text: "⬅️ Назад", callback_data: "back_to_menu" }]
   ];
 
-  return editSmart(bot, input, text, { inline_keyboard });
+  // ВАЖНО: parse_mode отключён
+  return editSmart(bot, input, text, { inline_keyboard }, null);
 };
