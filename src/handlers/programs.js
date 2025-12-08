@@ -1,5 +1,5 @@
 // src/handlers/programs.js
-const { editSmart } = require('../utils/editSmart');
+const editSmart = require('../utils/editSmart');
 
 exports.handlePrograms = async (bot, input) => {
   const text =
