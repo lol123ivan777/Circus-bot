@@ -1,109 +1,88 @@
 // src/handlers/genres.js
+const fs = require('fs');
+const path = require('path');
 const editSmart = require('../utils/editSmart');
 
-// твоё описание жанров
-const GENRE_DATA = {
-  juggling: {
-    title: '🎪 Жонглирование',
-    text:
-      '*Жонглирование* — один из самых древних цирковых жанров.\n' +
-      'Артисты демонстрируют виртуозное владение мячами, булавами, кольцами и другими предметами.\n\n' +
-      'Скорость, точность и координация — главное в этом жанре.'
-  },
-  clown: {
-    title: '🤡 Клоунада',
-    text:
-      '*Клоунада* — комический жанр циркового искусства.\n' +
-      'Клоуны работают с публикой, создают атмосферу праздника.\n\n' +
-      'Юмор, пластика и контакт со зрителем — основа клоунады.'
-  },
-  aerial: {
-    title: '🤸 Воздушные гимнасты',
-    text:
-      '*Воздушная гимнастика* — работа под куполом цирка.\n' +
-      'Полотна, трапеции, кольца и ремни позволяют артистам выполнять сложные трюки на высоте.\n\n' +
-      'Сила, гибкость и чувство баланса — ключевые элементы номера.'
-  }
+// грузим JSON с трюками
+const GENRES = JSON.parse(
+  fs.readFileSync(path.join(__dirname, '..', 'data', 'genres.json'), 'utf8')
+);
+
+// Названия для кнопок
+const GENRE_LABELS = {
+  juggling: "🎪 Жонглирование",
+  clown: "🤡 Клоунада",
+  aerial: "🤸 Воздушные гимнасты"
 };
 
-// ===== 1. МЕНЮ С ЖАНРАМИ =====
+// ===== 1. МЕНЮ ЖАНРОВ =====
 exports.handleGenres = async (bot, input) => {
-  const text =
-    '🎭 *Жанры циркового искусства*\n\n' +
-    'Выберите жанр, а затем попробуйте нейросетевую визуализацию.';
+  let text = "🎭 *Жанры циркового искусства*\n\nВыберите жанр.";
 
-  return editSmart(bot, input, text, {
-    inline_keyboard: [
-      [{ text: '🎪 Жонглирование', callback_data: 'genre:juggling' }],
-      [{ text: '🤡 Клоунада', callback_data: 'genre:clown' }],
-      [{ text: '🤸 Воздушные гимнасты', callback_data: 'genre:aerial' }],
-      [{ text: '⬅️ Назад в меню', callback_data: 'back_to_menu' }]
-    ]
-  });
+  const inline_keyboard = Object.keys(GENRES).map(key => [
+    { text: GENRE_LABELS[key], callback_data: `genre:${key}` }
+  ]);
+
+  inline_keyboard.push([{ text: "⬅️ Назад в меню", callback_data: "back_to_menu" }]);
+
+  return editSmart(bot, input, text, { inline_keyboard });
 };
 
 // ===== 2. ПОКАЗ КОНКРЕТНОГО ЖАНРА =====
 exports.handleGenreItem = async (bot, query) => {
-  const genreId = query.data.split(':')[1];
-  const genre = GENRE_DATA[genreId];
+  const genreId = query.data.split(":")[1];
+  const tricks = GENRES[genreId];
 
-  if (!genre) {
-    return editSmart(bot, query, '*Жанр временно недоступен.*', {
+  if (!tricks) {
+    return editSmart(bot, query, "*Жанр временно недоступен*", {
       inline_keyboard: [
-        [{ text: '⬅️ Назад', callback_data: 'genres' }]
+        [{ text: "⬅️ Назад", callback_data: "genres" }],
+        [{ text: "⬅️ В меню", callback_data: "back_to_menu" }]
       ]
     });
   }
 
-  const text = `*${genre.title}*\n\n${genre.text}`;
+  // текст жанра
+  let text = `*${GENRE_LABELS[genreId]}*\n\n`;
+  text += "Доступные элементы:\n\n";
 
-  return editSmart(bot, query, text, {
-    inline_keyboard: [
-      [{ text: '✨ Сгенерировать изображение', callback_data: `genre_ai:${genreId}` }],
-      [{ text: '⬅️ Назад', callback_data: 'genres' }]
-    ]
+  tricks.forEach((t, i) => {
+    text += `*${i + 1}.* ${t}\n`;
   });
+
+  const inline_keyboard = [
+    [{ text: "🎲 Сгенерировать связку", callback_data: `genre_mix:${genreId}` }],
+    [{ text: "⬅️ Назад к жанрам", callback_data: "genres" }],
+    [{ text: "⬅️ В меню", callback_data: "back_to_menu" }]
+  ];
+
+  return editSmart(bot, query, text, { inline_keyboard });
 };
 
-// ===== 3. СПРОСИТЬ У ПОЛЬЗОВАТЕЛЯ ЗАПРОС ДЛЯ ИИ =====
-exports.handleGenreAIRequest = async (bot, query) => {
-  const genreId = query.data.split(':')[1];
+// ===== 3. ИИ-МИКС (рандомный подбор трюков) =====
+exports.handleGenreMix = async (bot, query) => {
+  const genreId = query.data.split(":")[1];
+  const tricks = GENRES[genreId];
 
-  const text =
-    '✨ *ИИ-визуализация жанра*\n\n' +
-    'Введите короткий запрос, например:\n' +
-    '_“Жонглер с огненными булавами”_\n\n' +
-    'После ввода я сгенерирую изображение.';
+  if (!tricks) {
+    return editSmart(bot, query, "*Ошибка жанра*", {
+      inline_keyboard: [[{ text: "⬅️ Назад", callback_data: "genres" }]]
+    });
+  }
 
-  // ставим флаг ожидания
-  bot._waitingForPrompt = { genreId, chatId: query.message.chat.id };
+  // выбираем 3 случайных элемента
+  const mix = [...tricks]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 3);
 
-  return editSmart(bot, query, text, {
-    inline_keyboard: [
-      [{ text: '⬅️ Назад', callback_data: `genre:${genreId}` }]
-    ]
-  });
-};
+  let text = `🎲 *Связка для жанра ${GENRE_LABELS[genreId]}*\n\n`;
+  mix.forEach((t, i) => (text += `*${i + 1}.* ${t}\n`));
 
-// ===== 4. ОБРАБОТКА СООБЩЕНИЯ С ТЕКСТОМ ДЛЯ ГЕНЕРАЦИИ =====
-exports.handleGenreAIGenerate = async (bot, msg) => {
-  const session = bot._waitingForPrompt;
-  if (!session) return;
+  const inline_keyboard = [
+    [{ text: "🔄 Ещё вариант", callback_data: `genre_mix:${genreId}` }],
+    [{ text: "⬅️ Назад", callback_data: `genre:${genreId}` }],
+    [{ text: "⬅️ В меню", callback_data: "back_to_menu" }]
+  ];
 
-  if (msg.chat.id !== session.chatId) return;
-
-  const userPrompt = msg.text;
-  const genreId = session.genreId;
-
-  bot._waitingForPrompt = null;
-
-  const finalPrompt = `Цирковой жанр ${genreId}. ${userPrompt}. Стиль — реалистичное фото.`;
-
-  // здесь будет твоя генерация с Sorra/Gemini позже
-  // пока — заглушка с текстом
-  return bot.sendMessage(
-    msg.chat.id,
-    '🖼 *Изображение генерируется...*\n\n(ИИ-вставка появится здесь позже)',
-    { parse_mode: 'Markdown' }
-  );
+  return editSmart(bot, query, text, { inline_keyboard });
 };
