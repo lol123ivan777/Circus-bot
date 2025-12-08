@@ -1,4 +1,5 @@
 // src/keyboards/inlineMenu.js
+
 const inlineMenuKeyboard = {
   reply_markup: {
     inline_keyboard: [
@@ -11,10 +12,8 @@ const inlineMenuKeyboard = {
         { text: '📅 Расписание', callback_data: 'schedule' }
       ],
       [
+        { text: '🐅 Жанры', callback_data: 'genres' },
         { text: '🎟 Билеты', callback_data: 'tickets' }
-      ],
-      [
-        { text: '🐅 Жанры цирка', callback_data: 'genres' }
       ],
       [
         { text: '☎️ Контакты', callback_data: 'contacts' }
