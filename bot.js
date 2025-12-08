@@ -51,34 +51,15 @@ bot.on('callback_query', async (query) => {
 
 
   // routing: exact commands
-  if (data === 'back_to_menu' || data === 'main_menu') {
-    return safeRun(handleStart, bot, query, msgId);
-  }
-
-  if (data === 'about') return safeRun(handleAbout, bot, query);
-
-  if (data && data.startsWith('news')) return safeRun(handleNews, bot, query);
-
-  if (data && data.startsWith('artists')) return safeRun(handleArtists, bot, query);
-
-  if (data === 'schedule' || (data && data.startsWith('schedule_month:'))) {
-    return safeRun(handleSchedule, bot, query);
-  }
-
-  if (data === 'tickets') return safeRun(handleTickets, bot, query);
-
-  if (data === 'contacts') return safeRun(handleContacts, bot, query);
-
-  if (data === 'programs') return safeRun(handlePrograms, bot, query);
-
-  if (data === 'festival') return safeRun(handleFestival, bot, query);
-
-if (data === 'genres') return safeRun(handleGenres, bot, query);
-
-if (data.startsWith('genre:')) {
-  const id = data.split(':')[1];
-  return safeRun(handleGenreItem, bot, query, id);
-}
+  if (data === "about") return safeRun(handleAbout, bot, query);
+if (data === "news") return safeRun(handleNews, bot, query);
+if (data === "artists") return safeRun(handleArtists, bot, query);
+if (data === "schedule") return safeRun(handleSchedule, bot, query);
+if (data === "genres") return safeRun(handleGenres, bot, query);
+if (data.startsWith("genre:")) return safeRun(handleGenreItem, bot, query);
+if (data === "tickets") return safeRun(handleTickets, bot, query);
+if (data === "contacts") return safeRun(handleContacts, bot, query);
+if (data === "back_to_menu") return safeRun(handleStart, bot, query);
 
   // unknown
   try {
