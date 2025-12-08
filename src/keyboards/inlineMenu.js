@@ -7,16 +7,14 @@ const inlineMenuKeyboard = {
         { text: '📰 Новости', callback_data: 'news' }
       ],
       [
-        { text: '🎭 Программы', callback_data: 'programs' },
-        { text: '✨ Артисты', callback_data: 'artists' }
+        { text: '✨ Артисты', callback_data: 'artists' },
+        { text: '📅 Расписание', callback_data: 'schedule' }
       ],
       [
-        { text: '📅 Расписание', callback_data: 'schedule' },
-        { text: '🎟 Билеты', callback_data: 'tickets' }
+        { text: '🐅 Жанры цирка', callback_data: 'genres' }
       ],
       [
-        { text: '📞 Контакты', callback_data: 'contacts' },
-        { text: '🌟 Фестиваль', callback_data: 'festival' }
+        { text: '☎️ Контакты', callback_data: 'contacts' }
       ]
     ]
   }
